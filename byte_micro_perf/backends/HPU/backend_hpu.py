@@ -67,8 +67,8 @@ class BackendHPU(Backend):
         torch.hpu.synchronize()
 
     def empty_cache(self):
-        # torch.hpu.empty_cache()
-        raise NotImplementedError("No implementation of empty_cache() on Gaudi")
+        # empty_cache() is non-op on HPU
+        return
 
     def get_dist_module(self):
         return dist
