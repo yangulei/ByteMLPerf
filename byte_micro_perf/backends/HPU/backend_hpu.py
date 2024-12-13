@@ -27,6 +27,12 @@ from backends import module_store
 from backends.backend import Backend
 import habana_frameworks.torch as htorch
 
+from dataclasses import dataclass
+
+@dataclass
+class HPUDeviceProperties:
+    total_memory: int
+
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("PerfEngine")
 
@@ -41,7 +47,12 @@ class BackendHPU(Backend):
         return "hpu"
 
     def get_device_properties(self):
-        return torch.hpu.get_device_properties()
+        # '(sramBaseAddress=1153202979533225984, dramBaseAddress=1153203082662772736, sramSize=50331648, dramSize=102106132480, tpcEnabledMask=16777215, dramEnabled=1, fd=20, device_id=0, device_type=4)'
+        hpu_properties = torch.hpu.get_device_properties()
+        for prop in hpu_properties.split(", "):
+            if "dramSize" in prop:
+                dramSize=int(prop.replace("dramSize=", ""))
+        return HPUDeviceProperties(dramSize)
 
     def get_device_count(self):
         return torch.hpu.device_count()
