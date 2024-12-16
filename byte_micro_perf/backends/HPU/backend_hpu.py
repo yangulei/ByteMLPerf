@@ -72,8 +72,9 @@ class BackendHPU(Backend):
     def set_device(self, device_index : int):
         log.debug(f"BackendHPU.set_device() called by pid: {os.getpid()}")
         import habana_frameworks.torch as htorch
-        torch.hpu.set_device(device_index)
-    
+        # HPU only support set_device to 0
+        torch.hpu.set_device(0)
+
     def get_device(self):
         log.debug(f"BackendHPU.get_device() called by pid: {os.getpid()}")
         import habana_frameworks.torch as htorch
@@ -94,9 +95,8 @@ class BackendHPU(Backend):
         return dist
 
     def initialize_ccl(self, rank, world_size):
-        log.debug(f"BackendHPU.initialize_ccl() called by pid: {os.getpid()}")
-        # from habana_frameworks.torch.distributed.hccl import initialize_distributed_hpu
-        # world_size, rank, local_rank = initialize_distributed_hpu()
+        log.info(f"BackendHPU.initialize_ccl() called by pid: {os.getpid()}, rank = {rank}, world_size = {world_size}")
+        import habana_frameworks.torch as htorch
 
         # check device_count
         device_count = self.get_device_count()
@@ -106,19 +106,11 @@ class BackendHPU(Backend):
             return False
         self.set_device(rank)
 
-        # set envs and internal vars
-        os.environ["MASTER_ADDR"] = "127.0.0.1"
-        os.environ["MASTER_PORT"] = "49373"
-        os.environ["LOCAL_RANK"] = str(rank)
-        os.environ["RANK"] = str(rank)
-        os.environ["WORLD_SIZE"] = str(world_size)
+        os.environ['MASTER_ADDR'] = 'localhost'
+        os.environ['MASTER_PORT'] = '29500'
+        os.environ["ID"] = str(rank)
+        # create default process group
+        import habana_frameworks.torch.core.hccl
+        dist.init_process_group("hccl", rank=rank, world_size=world_size)
 
-        # init process group
-        self.get_dist_module().init_process_group(
-            backend="nccl",
-            world_size=world_size,
-            rank=rank, 
-            timeout=timedelta(seconds=1800)
-        )
         return True
-
