@@ -42,6 +42,7 @@ class BackendHPU(Backend):
     def __init__(self, workload_dict, vendor_path):
         log.debug(f"BackendHPU.__init__() called by pid: {os.getpid()}")
         super().__init__(workload_dict, vendor_path)
+        self.use_hpu_graphs = os.getenv('USE_HPU_GRAPHS', '0').lower() in ['1', 'true']
 
     def get_device_name(self):
         log.debug(f"BackendHPU.get_device_name() called by pid: {os.getpid()}")
@@ -115,6 +116,19 @@ class BackendHPU(Backend):
 
         return True
 
+    def get_op_instance(self):
+        from backends import module_store
+        default_op_registry = module_store.op_registry.copy()
+        if self.op_name in default_op_registry:
+            self.op = default_op_registry[self.op_name]
+            if self.use_hpu_graphs:
+                if self.op_name in ["allgather", "allreduce", "alltoall", "broadcast", "p2p", "reduce_scatter"]:
+                    os.environ['PT_HPU_ENABLE_LAZY_COLLECTIVES'] = True
+                import habana_frameworks.torch as htorch
+                self.op = htorch.hpu.wrap_in_hpu_graph(self.op)
+        else:
+            raise NotImplementedError
+    
     def _run_operation(self, operation, inputs):
         import habana_frameworks.torch as htorch
         result = operation(*inputs)
