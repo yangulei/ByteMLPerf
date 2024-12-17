@@ -114,3 +114,9 @@ class BackendHPU(Backend):
         dist.init_process_group("hccl", rank=rank, world_size=world_size)
 
         return True
+
+    def _run_operation(self, operation, inputs):
+        import habana_frameworks.torch as htorch
+        result = operation(*inputs)
+        htorch.core.mark_step()
+        return result
