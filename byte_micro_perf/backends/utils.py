@@ -136,3 +136,7 @@ def dump_computation_ops_report(
             "Error": error,
         }
     return report
+
+def is_hpu() -> bool:
+    from importlib import util
+    return util.find_spec('habana_frameworks') is not None

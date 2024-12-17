@@ -17,6 +17,7 @@ import random
 
 import torch
 import torch.distributed as dist
+from backends.utils import is_hpu
 
 def gemm_compute_size(input_shapes, torch_dtype, **kwargs):
     # input_shapes: [[M, K], [K, N]]
@@ -703,11 +704,15 @@ def host2device_create_tensors(input_shapes, torch_dtype, xpu_device, **kwargs):
     a_shape, = input_shapes
     batch_size, hidden_size = a_shape
 
-    host_tensor = torch.empty(
-        [batch_size, hidden_size], 
-        dtype=torch_dtype, 
-        device="cpu"
-    ).pin_memory()
+    if is_hpu():
+        # HPU does not support pin memory
+        host_tensor = torch.empty(
+            [batch_size, hidden_size], dtype=torch_dtype, device="cpu"
+        )
+    else:
+        host_tensor = torch.empty(
+            [batch_size, hidden_size], dtype=torch_dtype, device="cpu"
+        ).pin_memory()
     device_tensor = torch.empty(
         a_shape, 
         dtype=torch_dtype, 
