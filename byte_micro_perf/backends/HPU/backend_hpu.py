@@ -96,7 +96,7 @@ class BackendHPU(Backend):
         return dist
 
     def initialize_ccl(self, rank, world_size):
-        log.info(f"BackendHPU.initialize_ccl() called by pid: {os.getpid()}, rank = {rank}, world_size = {world_size}")
+        log.debug(f"BackendHPU.initialize_ccl() called by pid: {os.getpid()}, rank = {rank}, world_size = {world_size}")
         import habana_frameworks.torch as htorch
 
         # check device_count
@@ -109,7 +109,9 @@ class BackendHPU(Backend):
 
         os.environ['MASTER_ADDR'] = 'localhost'
         os.environ['MASTER_PORT'] = '29500'
-        os.environ["ID"] = str(rank)
+        os.environ["RANK"] = str(rank)
+        os.environ['PT_HPU_ENABLE_LAZY_COLLECTIVES'] = "True"
+
         # create default process group
         import habana_frameworks.torch.core.hccl
         dist.init_process_group("hccl", rank=rank, world_size=world_size)
