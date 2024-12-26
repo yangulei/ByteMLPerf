@@ -48,13 +48,10 @@ class BackendHPU(Backend):
 
     def get_device_name(self):
         log.debug(f"BackendHPU.get_device_name() called by pid: {os.getpid()}")
-        # return torch.hpu.get_device_name()
         return "Gaudi2"
 
     def get_torch_device_name(self):
         log.debug(f"BackendHPU.get_torch_device_name() called by pid: {os.getpid()}")
-        import habana_frameworks.torch as htorch
-
         return "hpu"
 
     def get_device_properties(self):
@@ -65,7 +62,6 @@ class BackendHPU(Backend):
 
     def get_device_count(self):
         log.debug(f"BackendHPU.get_device_count() called by pid: {os.getpid()}")
-        # return torch.hpu.device_count()
         device_count = (
             int(
                 subprocess.check_output(
