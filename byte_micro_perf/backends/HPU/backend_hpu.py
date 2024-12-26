@@ -37,7 +37,6 @@ class HPUDeviceProperties:
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("PerfEngine")
-log.setLevel(logging.DEBUG)
 log.setLevel(logging.INFO)
 
 
@@ -60,11 +59,7 @@ class BackendHPU(Backend):
 
     def get_device_properties(self):
         log.debug(f"BackendHPU.get_device_properties() called by pid: {os.getpid()}")
-        # '(sramBaseAddress=1153202979533225984, dramBaseAddress=1153203082662772736, sramSize=50331648, dramSize=102106132480, tpcEnabledMask=16777215, dramEnabled=1, fd=20, device_id=0, device_type=4)'
-        # hpu_properties = torch.hpu.get_device_properties()
-        # for prop in hpu_properties.split(", "):
-        #     if "dramSize" in prop:
-        #         dramSize=int(prop.replace("dramSize=", ""))
+
         dramSize = 102106132480
         return HPUDeviceProperties(dramSize)
 
